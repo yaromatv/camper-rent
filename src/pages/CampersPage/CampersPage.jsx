@@ -1,4 +1,6 @@
 // CampersPage.js
+// страница не показывает кемперов при первой загрузке. Они появляются только после фильтрации
+
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
@@ -12,31 +14,52 @@ import Filters from 'components/Filters/Filters';
 import Modal from 'components/Modal/Modal';
 
 const CampersPage = () => {
-  const [filters, setFilters] = useState({});
+  const [filteredCampers, setFilteredCampers] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [camperModal, setCamperModal] = useState(null);
   const dispatch = useDispatch();
-
-  const handleFilterChange = newFilters => {
-    setFilters({ ...filters, ...newFilters });
-    setCurrentPage(1);
-  };
 
   const {
     data: campersData,
     isLoading,
     error,
   } = useGetCampersQuery({ page: currentPage });
+  console.log('campersData:', campersData);
 
   const favorites = useSelector(state => state.favorites.campers);
 
-  const filteredCampers = campersData?.filter(camper => {
-    return Object.entries(filters).every(([key, value]) => {
-      if (!value) return true; // Если значение фильтра пустое, пропустить фильтрацию по этому свойству
-      if (key === 'vehicleType') return camper.vehicleType === value;
-      return String(camper[key]).toLowerCase().includes(value.toLowerCase());
+  const handleFilter = filters => {
+    console.log('filters: ', filters);
+    const { location, equipment, vehicleType } = filters;
+
+    // Фильтрация кемперов на основе выбранных параметров
+    const filtered = campersData.filter(camper => {
+      console.log(camper);
+      // Пример условий фильтрации
+
+      const locationMatch =
+        !location ||
+        camper.location.toLowerCase().includes(location.toLowerCase());
+
+      // const equipmentMatch = Object.keys(equipment).every(
+      //   key => !equipment[key] || camper.details[key]
+      // );
+      const equipmentMatch = Object.keys(equipment).every(key => {
+        if (key === 'automatic') {
+          return equipment.automatic
+            ? camper.transmission === 'automatic'
+            : true;
+        }
+        return !equipment[key] || camper.details[key];
+      });
+
+      const vehicleTypeMatch = !vehicleType || camper.form === vehicleType;
+
+      return locationMatch && equipmentMatch && vehicleTypeMatch;
     });
-  });
+    console.log('filtered:', filtered);
+    setFilteredCampers(filtered);
+  };
 
   const handleAddToFavorites = camper => {
     dispatch(addToFavorites(camper));
@@ -59,8 +82,11 @@ const CampersPage = () => {
   };
 
   useEffect(() => {
+    if (campersData && campersData.length > 0) {
+      setFilteredCampers(campersData);
+    }
     setCurrentPage(1);
-  }, [filters]);
+  }, [campersData]);
 
   if (isLoading) return <div>Loading...</div>;
   if (error) return <div>Error: {error.message}</div>;
@@ -68,19 +94,26 @@ const CampersPage = () => {
   return (
     <CampersPageContainer>
       <h2>Our Campers</h2>
-      <Filters onFiltersChange={handleFilterChange} />
-      <div className="camper-list">
-        {filteredCampers.map(camper => (
-          <CamperCard
-            key={camper._id}
-            camper={camper}
-            onAddToFavorites={() => handleAddToFavorites(camper)}
-            onRemoveFromFavorites={() => handleRemoveFromFavorites(camper._id)}
-            onShowModal={handleShowModal}
-            isFavorite={favorites.some(fav => fav._id === camper._id)}
-          />
-        ))}
-      </div>
+      <Filters onFilter={handleFilter} />
+      {isLoading ? (
+        <div>Загрузка...</div>
+      ) : (
+        <div className="camper-list">
+          {filteredCampers.map(camper => (
+            <CamperCard
+              key={camper._id}
+              camper={camper}
+              onAddToFavorites={() => handleAddToFavorites(camper)}
+              onRemoveFromFavorites={() =>
+                handleRemoveFromFavorites(camper._id)
+              }
+              onShowModal={handleShowModal}
+              isFavorite={favorites.some(fav => fav._id === camper._id)}
+            />
+          ))}
+        </div>
+      )}
+
       {camperModal && <Modal camper={camperModal} onClose={handleCloseModal} />}
       <button onClick={loadMoreCampers}>Load More</button>
     </CampersPageContainer>

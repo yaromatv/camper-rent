@@ -1,78 +1,156 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
-const Filters = ({ onFiltersChange }) => {
-  const handleInputChange = e => {
-    const { name, value, type, checked } = e.target;
-    const newValue = type === 'checkbox' ? checked : value;
-    onFiltersChange(prevFilters => ({
-      ...prevFilters,
-      [name]: newValue,
+const Filter = ({ onFilter }) => {
+  const [location, setLocation] = useState('');
+  const [equipment, setEquipment] = useState({
+    ac: false,
+    automatic: false,
+    kitchen: false,
+    tv: false,
+    shower: false,
+    toilet: false,
+  });
+  const [vehicleType, setVehicleType] = useState('');
+
+  const handleLocationChange = e => {
+    setLocation(e.target.value);
+  };
+
+  const handleEquipmentChange = e => {
+    const { name, checked } = e.target;
+    setEquipment(prevEquipment => ({
+      ...prevEquipment,
+      [name]: checked,
     }));
   };
 
+  const handleVehicleTypeChange = e => {
+    setVehicleType(e.target.value);
+  };
+
+  useEffect(() => {
+    const filters = {
+      location,
+      equipment,
+      vehicleType,
+    };
+    onFilter(filters);
+  }, [location, equipment, vehicleType, onFilter]);
+
   return (
-    <div className="filters">
-      <input
-        type="text"
-        name="location"
-        placeholder="Location"
-        onChange={handleInputChange}
-      />
-      <label>
-        <input type="checkbox" name="ac" onChange={handleInputChange} />
-        AC
-      </label>
-      <label>
-        <input type="checkbox" name="automatic" onChange={handleInputChange} />
-        Automatic
-      </label>
-      <label>
-        <input type="checkbox" name="kitchen" onChange={handleInputChange} />
-        Kitchen
-      </label>
-      <label>
-        <input type="checkbox" name="tv" onChange={handleInputChange} />
-        TV
-      </label>
-      <label>
-        <input type="checkbox" name="shower" onChange={handleInputChange} />
-        Shower
-      </label>
-      <label>
-        <input type="checkbox" name="wc" onChange={handleInputChange} />
-        WC
-      </label>
-      <div>
-        <label>
+    <div>
+      <form onSubmit={e => e.preventDefault()}>
+        <div>
+          <label htmlFor="location">Location:</label>
           <input
-            type="radio"
-            name="vehicleType"
-            value="van"
-            onChange={handleInputChange}
+            type="text"
+            id="location"
+            value={location}
+            onChange={handleLocationChange}
           />
-          Van
-        </label>
-        <label>
-          <input
-            type="radio"
-            name="vehicleType"
-            value="fullyIntegrated"
-            onChange={handleInputChange}
-          />
-          Fully Integrated
-        </label>
-        <label>
-          <input
-            type="radio"
-            name="vehicleType"
-            value="alcove"
-            onChange={handleInputChange}
-          />
-          Alcove
-        </label>
-      </div>
+        </div>
+        <div>
+          <span>Vehicle equipment:</span>
+          <label htmlFor="ac">
+            <input
+              type="checkbox"
+              id="ac"
+              name="ac"
+              checked={equipment.ac}
+              onChange={handleEquipmentChange}
+            />
+            AC
+          </label>
+          <label htmlFor="automatic">
+            <input
+              type="checkbox"
+              id="automatic"
+              name="automatic"
+              checked={equipment.automatic}
+              onChange={handleEquipmentChange}
+            />
+            Automatic
+          </label>
+          <label htmlFor="kitchen">
+            <input
+              type="checkbox"
+              id="kitchen"
+              name="kitchen"
+              checked={equipment.kitchen}
+              onChange={handleEquipmentChange}
+            />
+            Kitchen
+          </label>
+          <label htmlFor="tv">
+            <input
+              type="checkbox"
+              id="tv"
+              name="tv"
+              checked={equipment.tv}
+              onChange={handleEquipmentChange}
+            />
+            TV
+          </label>
+          <label htmlFor="shower">
+            <input
+              type="checkbox"
+              id="shower"
+              name="shower"
+              checked={equipment.shower}
+              onChange={handleEquipmentChange}
+            />
+            Shower
+          </label>
+          <label htmlFor="toilet">
+            <input
+              type="checkbox"
+              id="toilet"
+              name="toilet"
+              checked={equipment.toilet}
+              onChange={handleEquipmentChange}
+            />
+            Toilet
+          </label>
+        </div>
+        <div>
+          <span>Vehicle type:</span>
+          <label htmlFor="van">
+            <input
+              type="radio"
+              id="van"
+              name="vehicleType"
+              value="van"
+              checked={vehicleType === 'van'}
+              onChange={handleVehicleTypeChange}
+            />
+            Van
+          </label>
+          <label htmlFor="fullyIntegrated">
+            <input
+              type="radio"
+              id="fullyIntegrated"
+              name="vehicleType"
+              value="fullyIntegrated"
+              checked={vehicleType === 'fullyIntegrated'}
+              onChange={handleVehicleTypeChange}
+            />
+            Fully Integrated
+          </label>
+          <label htmlFor="alcove">
+            <input
+              type="radio"
+              id="alcove"
+              name="vehicleType"
+              value="alcove"
+              checked={vehicleType === 'alcove'}
+              onChange={handleVehicleTypeChange}
+            />
+            Alcove
+          </label>
+        </div>
+      </form>
     </div>
   );
 };
 
-export default Filters;
+export default Filter;
